@@ -1,0 +1,107 @@
+<?php 
+
+	class Shorturl extends CI_Controller {
+
+		public function __construct()
+		{
+			parent::__construct();
+			$this->load->helper('url');
+			$this->load->database();
+
+		}
+
+
+		//载入输入表单
+		public function index()
+		{
+			// $str = "http://www.163.com/";
+			// $lurl = explode("http://", string)
+
+			$this->load->view('shorturl.html');
+
+		} 
+
+		//保存网址
+		public function safeurl()
+		{
+			//
+			$lurl = $this->input->post('lurl');
+		
+			$this->load->model('surlmodel');
+			$lurl_is_empty = $this->surlmodel->checklurl($lurl);
+
+			if ($lurl_is_empty) {
+				//将目标网址按算法缩短，得到算网址
+				$surlhex = $this->shorturl($lurl);
+				$this->surlmodel->insert_entry($lurl,$surlhex);
+				//print_r($id);
+				$url['surl'] = site_url("/shorturl/jumpurl?hex=$surlhex");//返回给用户的短地址
+				$this->load->view('shorturl.html',$url);
+			
+			}
+			else
+			{	
+				$url = $this->surlmodel->getRow('lurl',$lurl);
+				$surlhex = $url['surlhex'];
+				$url['surl'] = site_url("/shorturl/jumpurl?hex=$surlhex");//返回给用户的短地址
+				$this->load->view('shorturl.html',$url);					
+
+			}
+
+		}
+
+
+		//跳转页面
+		public function jumpurl()
+		{
+
+			$this->load->model('surlmodel');
+			$hex = $this->input->get('hex');
+			$surl = $this->surlmodel->getRow('surlhex',$hex);
+			// print_r($surl);
+			header('location:http://'.$surl['lurl']);
+
+		}
+
+		public function shorturl($input)
+		{
+			
+			$base32 = array (  
+			    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',  
+			    'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',  
+			    'q', 'r', 's', 't', 'u', 'v', 'w', 'x',  
+			    'y', 'z', '0', '1', '2', '3', '4', '5'  
+			    );  
+			   
+			$hex = md5($input);  
+			$hexLen = strlen($hex);  
+			$subHexLen = $hexLen / 8;  
+			$output = array();  
+			   
+			for ($i = 0; $i < $subHexLen; $i++) {  
+			  $subHex = substr ($hex, $i * 8, 8);  
+			  $int = 0x3FFFFFFF & (1 * ('0x'.$subHex));  
+			  $out = '';  
+			   
+			  for ($j = 0; $j < 6; $j++) {  
+			    $val = 0x0000001F & $int;  
+			    $out .= $base32[$val];  
+			    $int = $int >> 5;  
+			  }  
+			   
+			  $output[] = $out;  
+			}  
+			
+			$key = array_rand($output);
+			$outputhex = $output[$key];
+
+			return $outputhex; 
+			
+		}
+
+
+
+	}
+
+
+ ?>

@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>ShowView</title>
+</head>
+<body>
+<h1>
+
+<?php echo $v_name ?>您是第<?php echo $v_count ?>位访问者
+
+
+</h1>
